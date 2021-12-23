@@ -5,3 +5,12 @@ version = "0.1.0"
 
 
 [dependencies]
+env_logger        = { version = "0.9" }
+futures-channel   = { version = "0.3" }
+futures-util      = { version = "0.3" }
+log               = { version = "0.4" }
+mini-redis        = { version = "0.4" }
+serde             = { version = "1.0", features = ["derive"] }
+serde_json        = { version = "1.0" }
+tokio             = { version = "1.12", features = ["full"] }
+tokio-tungstenite = { version = "0.16", features = ["native-tls"] }
