@@ -1,8 +1,7 @@
-use super::format::KeyFormat;
+use crate::config;
 use serde::Serialize;
-use serde_json::to_string;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Signal {
   pub exchange: String,
   pub symbol: String,
@@ -12,17 +11,7 @@ pub struct Signal {
   pub side: SignalSide,
 }
 
-impl Signal {
-  pub fn get_key(&self) -> String {
-    KeyFormat::Signal.of(self.symbol_key.clone(), self.exchange.clone())
-  }
-
-  pub fn get_value(&self) -> String {
-    to_string(self).unwrap()
-  }
-}
-
-#[derive(Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub enum SignalSide {
   Buy,
   Sell,
@@ -36,8 +25,8 @@ pub enum SignalThreshold {
 impl SignalThreshold {
   pub fn value(&self) -> f32 {
     match self {
-      Self::Ask => 0.0,
-      Self::Bid => 0.0,
+      Self::Ask => config::SIGNAL_THRESHOLD_ASK,
+      Self::Bid => config::SIGNAL_THRESHOLD_BID,
     }
   }
 }

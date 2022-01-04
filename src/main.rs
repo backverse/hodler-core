@@ -1,10 +1,11 @@
+mod config;
 mod exchange;
 mod hodler;
 
-use exchange::binance::binance::Binance;
-use exchange::bitkub::bitkub::Bitkub;
-use hodler::hodler::Hodler;
-use mini_redis::client;
+use crate::exchange::binance::binance::Binance;
+use crate::exchange::bitkub::bitkub::Bitkub;
+use crate::hodler::hodler::Hodler;
+use crate::hodler::server::HodlerServer;
 use tokio::join;
 
 #[tokio::main]
@@ -13,11 +14,12 @@ async fn main() {
 
   let binance = Binance::new();
   let bitkub = Bitkub::new();
-  let redis = client::connect("127.0.0.1:6379").await.unwrap();
-  let hodler = Hodler::new(redis);
+  let hodler = Hodler::new();
+  let hodler_server = HodlerServer::new(hodler.clone());
 
   join!(
     binance.connect_ws(hodler.clone()),
     bitkub.connect_ws(hodler.clone()),
+    hodler_server.serve()
   );
 }

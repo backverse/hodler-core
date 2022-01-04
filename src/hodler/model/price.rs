@@ -1,11 +1,15 @@
-#[derive(Clone, Debug)]
+use serde::Serialize;
+
+#[derive(Clone, Debug, Serialize)]
 pub struct BasePrice {
+  pub exchange: String,
   pub ask_price: f32,
   pub bid_price: f32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Price {
+  pub exchange: String,
   pub ask_premium: f32,
   pub ask_price: f32,
   pub bid_premium: f32,

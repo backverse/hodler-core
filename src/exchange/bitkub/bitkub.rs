@@ -3,6 +3,8 @@ use crate::exchange::exchange::Exchange;
 use crate::hodler::hodler::Hodler;
 use crate::hodler::model::ticker::MarketTicker;
 use futures_util::StreamExt;
+use log::error;
+use serde_json::from_str;
 use std::sync::{Arc, Mutex};
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::protocol::Message;
@@ -16,9 +18,8 @@ pub struct Bitkub {
 impl Bitkub {
   pub fn new() -> Self {
     Self {
-      name: Exchange::BitkubEx,
-      ticker_url: "wss://api.bitkub.com/websocket-api/market.ticker.thb_btc,market.ticker.thb_eth,market.ticker.thb_dot,market.ticker.thb_pow,market.ticker.thb_evx,market.ticker.thb_mana"
-        .into(),
+      name: Exchange::BitkubEx.clone(),
+      ticker_url: Exchange::BitkubEx.get_ticker_url(),
     }
   }
 
@@ -30,19 +31,23 @@ impl Bitkub {
       .for_each(|message| async {
         let message = &message.unwrap_or(Message::Close(None));
         let text = if message.is_text() { message } else { return };
-        let ticker = Ticker::from_str(text.to_string());
 
-        hodler
-          .lock()
-          .unwrap()
-          .update_market(MarketTicker {
-            exchange: self.name.get_name(),
-            symbol: ticker.stream.clone(),
-            symbol_key: self.name.get_key(ticker.stream),
-            ask_price: ticker.ask_price,
-            bid_price: ticker.bid_price,
-          })
-          .await;
+        match from_str::<Ticker>(&text.to_string()) {
+          Ok(ticker) => {
+            hodler
+              .lock()
+              .unwrap()
+              .update_market(MarketTicker {
+                exchange: self.name.get_name(),
+                symbol: ticker.stream.clone(),
+                symbol_key: self.name.get_key(ticker.stream),
+                ask_price: ticker.ask_price,
+                bid_price: ticker.bid_price,
+              })
+              .await;
+          }
+          Err(error) => error!("{:#?}", error),
+        };
       })
       .await;
   }

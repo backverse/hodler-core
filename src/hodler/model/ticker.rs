@@ -1,5 +1,4 @@
 use super::{
-  format::KeyFormat,
   price::{BasePrice, BaseSymbol},
   signal::{Signal, SignalSide},
 };
@@ -14,16 +13,13 @@ pub struct MarketTicker {
 }
 
 impl MarketTicker {
-  pub fn get_key(&self) -> String {
-    KeyFormat::MarketTicker.of(self.symbol_key.clone(), self.exchange.clone())
-  }
-
   pub fn is_base_ticker(&self) -> bool {
     self.symbol_key.contains(BaseSymbol::BTC.value())
   }
 
   pub fn to_base_price(&self) -> BasePrice {
     BasePrice {
+      exchange: self.exchange.clone(),
       ask_price: self.ask_price,
       bid_price: self.bid_price,
     }
@@ -37,8 +33,8 @@ impl MarketTicker {
       side: side.clone(),
       premium,
       price: match side {
-        SignalSide::Buy => self.ask_price,
-        SignalSide::Sell => self.bid_price,
+        SignalSide::Buy => self.ask_price.clone(),
+        SignalSide::Sell => self.bid_price.clone(),
       },
     }
   }

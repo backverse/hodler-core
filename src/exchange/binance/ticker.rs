@@ -1,6 +1,5 @@
 use serde::Deserialize;
 use serde::Deserializer;
-use serde_json::from_str;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -8,12 +7,6 @@ pub struct Ticker {
   pub ask_price: f32,
   pub bid_price: f32,
   pub symbol: String,
-}
-
-impl Ticker {
-  pub fn from_str(string: String) -> Ticker {
-    from_str::<Option<Ticker>>(&string).unwrap().unwrap()
-  }
 }
 
 impl<'de> Deserialize<'de> for Ticker {
