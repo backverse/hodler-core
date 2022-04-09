@@ -1,0 +1,16 @@
+version: 0.0
+os: linux
+files:
+  - source: .
+    destination: /home/ec2-user/hodler-signal/
+file_exists_behavior: OVERWRITE
+hooks:
+  AfterInstall:
+    - location: .scripts/setup.sh
+      timeout: 180
+  ApplicationStart:
+    - location: .scripts/start.sh
+      timeout: 600
+  ApplicationStop:
+    - location: .scripts/stop.sh
+      timeout: 180
