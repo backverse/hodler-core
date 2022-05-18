@@ -1,4 +1,4 @@
-use crate::config;
+use config;
 use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]

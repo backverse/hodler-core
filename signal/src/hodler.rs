@@ -1,8 +1,10 @@
-use super::model::oracle::Oracle;
-use super::model::price::{BasePrice, Price};
-use super::model::signal::SignalThreshold;
-use super::model::signal::{Signal, SignalSide};
-use super::model::ticker::MarketTicker;
+pub mod models;
+
+use self::models::oracle::Oracle;
+use self::models::price::{BasePrice, Price};
+use self::models::signal::SignalThreshold;
+use self::models::signal::{Signal, SignalSide};
+use self::models::ticker::MarketTicker;
 use log::debug;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -75,12 +77,12 @@ impl Hodler {
           bid_price,
         });
 
-        if price.ask_premium > SignalThreshold::Ask.value() {
+        if price.ask_premium <= SignalThreshold::Ask.value() {
           let signal = market_ticker.to_signal(SignalSide::Buy, price.ask_premium);
           self.publish(signal).await;
         };
 
-        if price.bid_premium > SignalThreshold::Bid.value() {
+        if price.bid_premium >= SignalThreshold::Bid.value() {
           let signal = market_ticker.to_signal(SignalSide::Sell, price.bid_premium);
           self.publish(signal).await;
         };
@@ -89,6 +91,6 @@ impl Hodler {
   }
 
   pub async fn publish(&self, signal: Signal) {
-    debug!("{:#?}", signal);
+    debug!(target: "hodler", "{signal:?}");
   }
 }

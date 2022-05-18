@@ -1,6 +1,6 @@
-use super::hodler::Hodler;
-use crate::hodler::model::oracle::OracleJson;
-use crate::hodler::model::price::BasePrice;
+use super::Hodler;
+use crate::hodler::models::oracle::OracleJson;
+use crate::hodler::models::price::BasePrice;
 use hyper::header::HeaderValue;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Error, Method, Response, Server, StatusCode};
@@ -78,10 +78,10 @@ impl HodlerServer {
 
     let server = Server::bind(&self.address).serve(service);
 
-    info!("Listening on http://{}", self.address);
+    info!("🚀 Listening on http://{address}", address = self.address);
 
     if let Err(err) = server.await {
-      error!("Server error: {:#?}", err);
+      error!("Server error: {err:#?}");
     }
   }
 }

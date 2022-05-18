@@ -6,5 +6,6 @@ pub struct Ticker {
   pub ask_price: f32,
   #[serde(rename = "highestBid")]
   pub bid_price: f32,
-  pub stream: String,
+  #[serde(rename = "stream")]
+  pub symbol: String,
 }
