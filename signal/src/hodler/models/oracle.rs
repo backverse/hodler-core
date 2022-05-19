@@ -1,4 +1,4 @@
-use super::price::{BasePrice, Price};
+use super::price::Price;
 use serde::Serialize;
 use std::cmp::Ordering::Equal;
 use std::collections::HashMap;
@@ -7,10 +7,13 @@ use std::collections::HashMap;
 pub struct Oracle {
   pub symbol: String,
   pub ask_best_exchange: String,
+  pub ask_best_symbol: String,
   pub ask_best_price: f32,
   pub ask_avg_price: f32,
   pub bid_best_exchange: String,
+  pub bid_best_symbol: String,
   pub bid_best_price: f32,
+  pub bid_best_original: f32,
   pub bid_avg_price: f32,
   pub prices: HashMap<String, Price>,
 }
@@ -19,10 +22,13 @@ pub struct Oracle {
 pub struct OracleJson {
   pub symbol: String,
   pub ask_best_exchange: String,
+  pub ask_best_symbol: String,
   pub ask_best_price: f32,
   pub ask_avg_price: f32,
   pub bid_best_exchange: String,
+  pub bid_best_symbol: String,
   pub bid_best_price: f32,
+  pub bid_best_original: f32,
   pub bid_avg_price: f32,
   pub prices: Vec<Price>,
 }
@@ -31,36 +37,27 @@ impl Oracle {
   pub fn to_json(&self) -> OracleJson {
     OracleJson {
       symbol: self.symbol.clone(),
+      ask_best_symbol: self.ask_best_symbol.clone(),
+      ask_avg_price: self.ask_avg_price.clone(),
       ask_best_exchange: self.ask_best_exchange.clone(),
       ask_best_price: self.ask_best_price.clone(),
-      ask_avg_price: self.ask_avg_price.clone(),
+      bid_best_symbol: self.bid_best_symbol.clone(),
+      bid_avg_price: self.bid_avg_price.clone(),
       bid_best_exchange: self.bid_best_exchange.clone(),
       bid_best_price: self.bid_best_price.clone(),
-      bid_avg_price: self.bid_avg_price.clone(),
+      bid_best_original: self.bid_best_original.clone(),
       prices: self.prices.clone().into_values().collect(),
     }
   }
 
-  pub fn update_price(
-    &mut self,
-    BasePrice {
-      exchange,
-      ask_price,
-      bid_price,
-    }: BasePrice,
-  ) -> Price {
-    self.prices.insert(
-      exchange.clone(),
-      Price {
-        exchange: exchange.clone(),
-        ask_premium: 0.0,
-        ask_price,
-        bid_premium: 0.0,
-        bid_price,
-      },
-    );
+  pub fn update_price(&mut self, price: Price) -> Price {
+    let exchange = price.exchange.clone();
+    let ask_price = price.ask_price.clone();
+    let bid_price = price.bid_price.clone();
 
-    if exchange.clone() == self.ask_best_exchange || ask_price > self.ask_best_price {
+    self.prices.insert(exchange.clone(), price);
+
+    if exchange.clone() == self.ask_best_exchange || ask_price < self.ask_best_price {
       let price = self
         .prices
         .clone()
@@ -69,6 +66,7 @@ impl Oracle {
         .unwrap();
 
       self.ask_best_exchange = price.exchange;
+      self.ask_best_symbol = price.symbol;
       self.ask_best_price = price.ask_price;
     };
 
@@ -81,7 +79,9 @@ impl Oracle {
         .unwrap();
 
       self.bid_best_exchange = price.exchange;
+      self.bid_best_symbol = price.symbol;
       self.bid_best_price = price.bid_price;
+      self.bid_best_original = price.bid_original;
     };
 
     self.ask_avg_price = 0.0;
@@ -90,6 +90,7 @@ impl Oracle {
       let price = self.prices.get_mut(&price.exchange).unwrap();
       self.ask_avg_price += price.ask_price;
       self.bid_avg_price += price.bid_price;
+      price.arbitrage = (self.bid_best_price / price.ask_price) - 1.0;
       price.ask_premium = (price.ask_price / self.ask_best_price) - 1.0;
       price.bid_premium = (price.bid_price / self.bid_best_price) - 1.0;
     });

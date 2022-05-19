@@ -1,7 +1,4 @@
-use super::{
-  price::{BasePrice, BaseSymbol},
-  signal::{Signal, SignalSide},
-};
+use super::price::{BasePrice, BaseSymbol};
 
 #[derive(Clone)]
 pub struct MarketTicker {
@@ -22,20 +19,6 @@ impl MarketTicker {
       exchange: self.exchange.clone(),
       ask_price: self.ask_price,
       bid_price: self.bid_price,
-    }
-  }
-
-  pub fn to_signal(&self, side: SignalSide, premium: f32) -> Signal {
-    Signal {
-      exchange: self.exchange.clone(),
-      symbol: self.symbol.clone(),
-      symbol_key: self.symbol_key.clone(),
-      side: side.clone(),
-      premium,
-      price: match side {
-        SignalSide::Buy => self.ask_price.clone(),
-        SignalSide::Sell => self.bid_price.clone(),
-      },
     }
   }
 }
