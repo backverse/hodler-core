@@ -3,6 +3,7 @@ mod server;
 
 use crate::hodler::Hodler;
 use crate::{hodler::models::ticker::MarketTicker, server::HodlerServer};
+use env_logger::{Builder, Env};
 use exchange::{binance, bitkub, ftx};
 use futures_util::StreamExt;
 use log::error;
@@ -12,7 +13,7 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 
 #[tokio::main]
 async fn main() {
-  env_logger::init();
+  Builder::from_env(Env::default().default_filter_or(config::DEFAULT_LOGGING_LEVEL)).init();
   let hodler = Hodler::new();
   let hodler_server = HodlerServer::new(hodler.clone());
 

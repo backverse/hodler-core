@@ -18,7 +18,7 @@ pub struct HodlerServer {
 impl HodlerServer {
   pub fn new(hodler: Arc<Mutex<Hodler>>) -> HodlerServer {
     HodlerServer {
-      address: "0.0.0.0:3000".parse().unwrap(),
+      address: SocketAddr::new("0.0.0.0".parse().unwrap(), config::PORT),
       hodler,
     }
   }

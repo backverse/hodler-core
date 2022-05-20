@@ -1,3 +1,4 @@
-pub const SIGNAL_THRESHOLD_ARBITRAGE: f32 = 0.01;
-pub const SYMBOLS: &'static str =
-  "btc,eth,dot,powr,evx,mana,near,zil,doge,bnb,iost,sand,gala,sol,avax";
+pub const PORT: u16 = 3000;
+pub const DEFAULT_LOGGING_LEVEL: &str = "info";
+pub const SIGNAL_THRESHOLD: f32 = 0.01;
+pub const SYMBOLS: &str = "btc,eth,dot,powr,evx,mana,near,zil,doge,bnb,iost,sand,gala,sol,avax";

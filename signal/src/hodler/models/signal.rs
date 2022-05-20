@@ -1,4 +1,3 @@
-use config;
 use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
@@ -24,7 +23,7 @@ pub enum SignalThreshold {
 impl SignalThreshold {
   pub fn value(&self) -> f32 {
     match self {
-      Self::Arbitrage => config::SIGNAL_THRESHOLD_ARBITRAGE,
+      Self::Arbitrage => config::SIGNAL_THRESHOLD,
     }
   }
 }

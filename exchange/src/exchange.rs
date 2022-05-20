@@ -1,5 +1,3 @@
-use config;
-
 #[derive(Clone)]
 pub enum Exchange {
   BinanceEx,
