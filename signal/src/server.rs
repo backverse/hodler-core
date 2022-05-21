@@ -1,7 +1,7 @@
 use super::Hodler;
 use crate::hodler::models::oracle::OracleJson;
 use crate::hodler::models::price::BasePrice;
-use hyper::header::HeaderValue;
+use hyper::header::{ACCESS_CONTROL_ALLOW_ORIGIN, CONTENT_TYPE};
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Error, Method, Response, Server, StatusCode};
 use log::{error, info};
@@ -63,11 +63,10 @@ impl HodlerServer {
 
           let body = Body::from(raw.to_string());
           let mut response = Response::builder().body(body).unwrap();
+          let headers = response.headers_mut();
 
-          response.headers_mut().insert(
-            "Content-Type",
-            HeaderValue::from_str("application/json").unwrap(),
-          );
+          headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
+          headers.insert(ACCESS_CONTROL_ALLOW_ORIGIN, "*".parse().unwrap());
 
           return Ok::<_, Error>(response);
         }
