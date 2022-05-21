@@ -33,6 +33,9 @@ impl HodlerServer {
         async move {
           let hodler = hodler.lock().unwrap();
           let raw = match (req.method(), req.uri().path()) {
+            (&Method::GET, "/") => {
+              json!({"status": "OK"})
+            }
             (&Method::GET, "/bases") => {
               let base_prices = hodler
                 .bases
