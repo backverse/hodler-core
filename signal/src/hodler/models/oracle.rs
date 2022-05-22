@@ -31,6 +31,7 @@ pub struct OracleJson {
   pub bid_best_original: f32,
   pub bid_avg_price: f32,
   pub prices: Vec<Price>,
+  pub icon_id: String,
 }
 
 impl Oracle {
@@ -47,6 +48,25 @@ impl Oracle {
       bid_best_price: self.bid_best_price.clone(),
       bid_best_original: self.bid_best_original.clone(),
       prices: self.prices.clone().into_values().collect(),
+      icon_id: match self.symbol.as_str() {
+        "btc" => "1",
+        "eth" => "1027",
+        "dot" => "6636",
+        "pow" => "2132",
+        "ltc" => "2",
+        "mana" => "1966",
+        "near" => "6535",
+        "zil" => "2469",
+        "doge" => "74",
+        "bnb" => "1839",
+        "iost" => "2405",
+        "sand" => "6210",
+        "gala" => "7080",
+        "sol" => "5426",
+        "avax" => "5805",
+        _ => "",
+      }
+      .to_string(),
     }
   }
 
