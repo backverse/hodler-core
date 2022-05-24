@@ -69,12 +69,12 @@ impl Exchange {
 
   pub fn get_key(&self, symbol: String) -> String {
     match self {
-      Self::BinanceEx => match symbol.replace("usdt", "").as_str() {
-        "powr" => "pow",
+      Self::BinanceEx => symbol.replace("usdt", ""),
+      Self::BitkubEx => match symbol.replace("market.ticker.thb_", "").as_str() {
+        "pow" => "powr",
         symbol => &symbol,
       }
       .to_string(),
-      Self::BitkubEx => symbol.replace("market.ticker.thb_", ""),
       Self::FtxEx => symbol.replace("-USD", ""),
     }
   }

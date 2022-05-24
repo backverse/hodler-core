@@ -9,6 +9,7 @@ config            = { path = "../config" }
 env_logger        = { version = "0" }
 exchange          = { path = "../exchange" }
 futures-util      = { version = "0" }
+hodler            = { path = "../hodler" }
 hyper             = { version = "0", features = ["full"] }
 log               = { version = "0" }
 serde             = { version = "1", features = ["derive"] }

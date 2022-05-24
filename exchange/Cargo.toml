@@ -5,6 +5,7 @@ version = "0.1.0"
 
 
 [dependencies]
+chrono            = { version = "0.4" }
 config            = { path = "../config" }
 futures-util      = { version = "0" }
 serde             = { version = "1", features = ["derive"] }

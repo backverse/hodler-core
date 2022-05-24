@@ -1,0 +1,10 @@
+[package]
+edition = "2021"
+name    = "hodler"
+version = "0.1.0"
+
+
+[dependencies]
+config = { path = "../config" }
+log    = { version = "0" }
+serde  = { version = "1", features = ["derive"] }
