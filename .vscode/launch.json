@@ -6,9 +6,9 @@
       "request": "launch",
       "name": "Debug",
       "cargo": {
-        "args": ["build", "--bin=hodler-signal", "--package=hodler-signal"],
+        "args": ["build"],
         "filter": {
-          "name": "hodler-signal",
+          "name": "signal",
           "kind": "bin"
         }
       },
@@ -20,9 +20,9 @@
       "request": "launch",
       "name": "Debug Unit Tests",
       "cargo": {
-        "args": ["test", "--no-run", "--bin=hodler-signal", "--package=hodler-signal"],
+        "args": ["test", "--no-run"],
         "filter": {
-          "name": "hodler-signal",
+          "name": "signal",
           "kind": "bin"
         }
       },
