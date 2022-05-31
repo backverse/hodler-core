@@ -1,33 +1,43 @@
-# Database
+# Hodler Core
 
-{exchange}
-
-```rs
-struct BasePrice {
-  pub ask_price: f32,
-  pub bid_price: f32,
+```mermaid
+classDiagram
+class Exchange {
+  <<enumeration>>
+  BINANCE
+  BITKUB
 }
-```
 
-{symbol}:{exchange}
-
-```rs
-struct Price {
-  pub ask_premium: f32,
-  pub ask_price: f32,
-  pub bid_premium: f32,
-  pub bid_price: f32,
+class Hodler {
+    Map~Exchange, BasePrice~ base_prices
+    Map~Symbol, ExchangeToPriceMap~ prices
 }
-```
 
-{symbol}
-
-```rs
-struct OraclePrice {
-  pub ask_best: f32,
-  pub ask_price: f32,
-  pub bid_best: f32,
-  pub bid_price: f32,
-  pub prices: HashMap<String, BasePrice>,
+class BasePrice {
+  Exchange exchange
+  f32 ask_price
+  f32 bid_price
+  i64 timestamp
 }
+
+class ExchangeToPriceMap {
+  ~Exchange~ ~Price~
+}
+
+class Price {
+  Exchange exchange
+  Symbol symbol
+  String ticker_name
+  f32 ask_original
+  f32 ask_price
+  f32 bid_original
+  f32 bid_price
+  f32 volume
+  f32 percent_change
+  i64 timestamp
+}
+
+Hodler..BasePrice
+Hodler..ExchangeToPriceMap
+ExchangeToPriceMap..Price
 ```
