@@ -1,5 +1,5 @@
 use super::Hodler;
-use hodler::models::price::{BasePrice, Price};
+use hodler::models::price::Price;
 use hyper::header::{ACCESS_CONTROL_ALLOW_ORIGIN, CONTENT_TYPE};
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Error, Method, Response, Server, StatusCode};
@@ -31,11 +31,39 @@ impl HodlerServer {
               json!({"status": "OK"})
             }
             (&Method::GET, "/base-prices") => {
-              let base_prices = hodler
+              #[derive(Clone, Debug, Serialize)]
+              pub struct BasePrice {
+                pub exchange: String,
+                pub ask_price: f32,
+                pub bid_price: f32,
+                pub code: String,
+              }
+
+              let mut base_prices = hodler
                 .base_prices
                 .clone()
                 .into_values()
+                .map(|price| BasePrice {
+                  exchange: price.exchange.clone(),
+                  ask_price: price.ask_price,
+                  bid_price: price.bid_price,
+                  code: match price.exchange.as_str() {
+                    "bitkub" => "THB",
+                    _ => "USD",
+                  }
+                  .to_string(),
+                })
                 .collect::<Vec<BasePrice>>();
+
+              base_prices.insert(
+                0,
+                BasePrice {
+                  exchange: "Hodler".to_string(),
+                  ask_price: 1.0,
+                  bid_price: 1.0,
+                  code: "BTC".to_string(),
+                },
+              );
 
               json!(base_prices)
             }
