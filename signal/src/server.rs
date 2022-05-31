@@ -30,20 +30,21 @@ impl HodlerServer {
             (&Method::GET, "/") => {
               json!({"status": "OK"})
             }
-            (&Method::GET, "/base-prices") => {
+            (&Method::GET, "/currencies") => {
               #[derive(Clone, Debug, Serialize)]
-              pub struct BasePrice {
+              pub struct Currency {
                 pub exchange: String,
                 pub ask_price: f32,
                 pub bid_price: f32,
                 pub code: String,
+                pub fraction_digits: u8,
               }
 
-              let mut base_prices = hodler
+              let mut currencies = hodler
                 .base_prices
                 .clone()
                 .into_values()
-                .map(|price| BasePrice {
+                .map(|price| Currency {
                   exchange: price.exchange.clone(),
                   ask_price: price.ask_price,
                   bid_price: price.bid_price,
@@ -52,20 +53,22 @@ impl HodlerServer {
                     _ => "USD",
                   }
                   .to_string(),
+                  fraction_digits: 2,
                 })
-                .collect::<Vec<BasePrice>>();
+                .collect::<Vec<Currency>>();
 
-              base_prices.insert(
+              currencies.insert(
                 0,
-                BasePrice {
+                Currency {
                   exchange: "Hodler".to_string(),
                   ask_price: 1.0,
                   bid_price: 1.0,
                   code: "BTC".to_string(),
+                  fraction_digits: 8,
                 },
               );
 
-              json!(base_prices)
+              json!(currencies)
             }
             (&Method::GET, "/prices") => {
               let prices = hodler
