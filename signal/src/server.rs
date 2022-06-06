@@ -94,6 +94,7 @@ impl HodlerServer {
                 pub best_bid_exchange: String,
                 pub best_bid_price: f32,
                 pub best_bid_ticker_name: String,
+                pub best_arbitrage: f32,
                 pub icon_id: String,
               }
 
@@ -116,6 +117,7 @@ impl HodlerServer {
                   let mut best_bid_exchange = exchange.exchange;
                   let mut best_bid_price = exchange.ask_price;
                   let mut best_bid_ticker_name = exchange.ticker_name;
+                  let mut best_arbitrage = (1.0 - exchange.bid_price / exchange.ask_price) * 100.0;
 
                   exchanges.for_each(|price| {
                     symbol = price.clone().symbol.clone();
@@ -136,6 +138,11 @@ impl HodlerServer {
                       best_bid_price = price.bid_price.clone();
                       best_bid_ticker_name = price.ticker_name.clone();
                     }
+
+                    let arbitrage_rate = (1.0 - price.bid_price / price.ask_price) * 100.0;
+                    if arbitrage_rate > best_arbitrage {
+                      best_arbitrage = arbitrage_rate;
+                    }
                   });
 
                   Overview {
@@ -148,6 +155,7 @@ impl HodlerServer {
                     best_bid_exchange,
                     best_bid_price,
                     best_bid_ticker_name,
+                    best_arbitrage,
                     volume: sum_volume * sum_ask_price / n,
                     percent_change: sum_percent_change / n,
                     icon_id: match symbol.as_str() {
