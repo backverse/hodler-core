@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
-pub struct BasePrice {
+pub struct Currency {
   pub exchange: String,
   pub ask_price: f32,
   pub bid_price: f32,
@@ -9,7 +9,7 @@ pub struct BasePrice {
 }
 
 #[derive(Clone, Debug, Serialize)]
-pub struct Price {
+pub struct Cryptocurrency {
   pub exchange: String,
   pub symbol: String,
   pub ticker_name: String,

@@ -1,5 +1,5 @@
 use super::Hodler;
-use hodler::models::price::Price;
+use hodler::models::currency::Cryptocurrency;
 use hyper::header::{ACCESS_CONTROL_ALLOW_ORIGIN, CONTENT_TYPE};
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Error, Method, Response, Server, StatusCode};
@@ -38,49 +38,52 @@ impl HodlerServer {
                 pub bid_price: f32,
                 pub code: String,
                 pub fraction_digits: u8,
+                pub updated_at: i64,
               }
 
               let mut currencies = hodler
-                .base_prices
+                .currencies
                 .clone()
                 .into_values()
-                .map(|price| Currency {
-                  exchange: price.exchange.clone(),
-                  ask_price: price.ask_price,
-                  bid_price: price.bid_price,
-                  code: match price.exchange.as_str() {
+                .map(|currency| Currency {
+                  exchange: currency.exchange.clone(),
+                  ask_price: currency.ask_price,
+                  bid_price: currency.bid_price,
+                  code: match currency.exchange.as_str() {
                     "bitkub" => "THB",
                     _ => "USD",
                   }
                   .to_string(),
                   fraction_digits: 2,
+                  updated_at: currency.timestamp,
                 })
                 .collect::<Vec<Currency>>();
 
               currencies.insert(
                 0,
                 Currency {
-                  exchange: "Hodler".to_string(),
+                  exchange: "hodler".to_string(),
                   ask_price: 1.0,
                   bid_price: 1.0,
                   code: "BTC".to_string(),
                   fraction_digits: 8,
+                  updated_at: 0,
                 },
               );
 
               json!(currencies)
             }
-            (&Method::GET, "/prices") => {
-              let prices = hodler
-                .prices
+            (&Method::GET, "/cryptocurrencies") => {
+              let cryptocurrencies = hodler
+                .cryptocurrencies
                 .clone()
                 .into_values()
                 .map(|exchanges| exchanges.clone().into_values().collect())
-                .collect::<Vec<Vec<Price>>>();
+                .collect::<Vec<Vec<Cryptocurrency>>>();
 
-              json!(prices)
+              json!(cryptocurrencies)
             }
-            (&Method::GET, "/overview") => {
+            (&Method::GET, "/overviews") => {
               #[derive(Serialize)]
               pub struct Overview {
                 pub symbol: String,
@@ -98,8 +101,8 @@ impl HodlerServer {
                 pub icon_id: String,
               }
 
-              let mut overview = hodler
-                .prices
+              let mut overviews = hodler
+                .cryptocurrencies
                 .clone()
                 .into_values()
                 .map(|exchanges| {
@@ -117,29 +120,29 @@ impl HodlerServer {
                   let mut best_bid_exchange = exchange.exchange;
                   let mut best_bid_price = exchange.ask_price;
                   let mut best_bid_ticker_name = exchange.ticker_name;
-                  let mut best_arbitrage = (1.0 - exchange.bid_price / exchange.ask_price) * 100.0;
+                  let mut best_arbitrage = 1.0 - exchange.bid_price / exchange.ask_price;
 
-                  exchanges.for_each(|price| {
-                    symbol = price.clone().symbol.clone();
-                    sum_volume += price.volume.clone();
-                    sum_percent_change += price.percent_change.clone();
-                    sum_ask_price += price.ask_price.clone();
-                    sum_bid_price += price.bid_price.clone();
+                  exchanges.for_each(|cryptocurrency| {
+                    symbol = cryptocurrency.clone().symbol.clone();
+                    sum_volume += cryptocurrency.volume.clone();
+                    sum_percent_change += cryptocurrency.percent_change.clone();
+                    sum_ask_price += cryptocurrency.ask_price.clone();
+                    sum_bid_price += cryptocurrency.bid_price.clone();
                     n += 1.0;
 
-                    if price.ask_price.clone() < best_ask_price {
-                      best_ask_exchange = price.exchange.clone();
-                      best_ask_price = price.ask_price.clone();
-                      best_ask_ticker_name = price.ticker_name.clone();
+                    if cryptocurrency.ask_price.clone() < best_ask_price {
+                      best_ask_exchange = cryptocurrency.exchange.clone();
+                      best_ask_price = cryptocurrency.ask_price.clone();
+                      best_ask_ticker_name = cryptocurrency.ticker_name.clone();
                     }
 
-                    if price.bid_price.clone() > best_bid_price {
-                      best_bid_exchange = price.exchange.clone();
-                      best_bid_price = price.bid_price.clone();
-                      best_bid_ticker_name = price.ticker_name.clone();
+                    if cryptocurrency.bid_price.clone() > best_bid_price {
+                      best_bid_exchange = cryptocurrency.exchange.clone();
+                      best_bid_price = cryptocurrency.bid_price.clone();
+                      best_bid_ticker_name = cryptocurrency.ticker_name.clone();
                     }
 
-                    let arbitrage_rate = (1.0 - price.bid_price / price.ask_price) * 100.0;
+                    let arbitrage_rate = 1.0 - cryptocurrency.bid_price / cryptocurrency.ask_price;
                     if arbitrage_rate > best_arbitrage {
                       best_arbitrage = arbitrage_rate;
                     }
@@ -155,7 +158,7 @@ impl HodlerServer {
                     best_bid_exchange,
                     best_bid_price,
                     best_bid_ticker_name,
-                    best_arbitrage,
+                    best_arbitrage: best_arbitrage * 100.0,
                     volume: sum_volume * sum_ask_price / n,
                     percent_change: sum_percent_change / n,
                     icon_id: match symbol.as_str() {
@@ -181,13 +184,13 @@ impl HodlerServer {
                 })
                 .collect::<Vec<Overview>>();
 
-              overview.sort_by(|a, b| b.volume.partial_cmp(&a.volume).unwrap());
+              overviews.sort_by(|a, b| b.volume.partial_cmp(&a.volume).unwrap());
 
-              json!(overview)
+              json!(overviews)
             }
             (&Method::GET, "/insights") => {
               let raw_query = req.uri().query().unwrap();
-              let query_pattern = Regex::new(r"(^s|&s)ymbol=(?P<symbol>\w+)").unwrap();
+              let query_pattern = Regex::new(r"(^|&)symbol=(?P<symbol>\w+)").unwrap();
               let query = query_pattern.captures_iter(raw_query);
               let symbol = match query.last() {
                 Some(q) => q["symbol"].to_string(),
@@ -201,7 +204,7 @@ impl HodlerServer {
                 }
               };
 
-              let exchanges = match hodler.prices.clone().get(&symbol) {
+              let exchanges = match hodler.cryptocurrencies.clone().get(&symbol) {
                 Some(e) => e.clone(),
                 None => {
                   return Ok(
@@ -214,7 +217,7 @@ impl HodlerServer {
               };
 
               #[derive(Serialize)]
-              pub struct Insight {
+              pub struct Summary {
                 pub symbol: String,
                 pub volume: f32,
                 pub percent_change: f32,
@@ -250,7 +253,7 @@ impl HodlerServer {
 
               let mut arbitrages = Vec::<Arbitrage>::new();
               let mut premiums = Vec::<Premium>::new();
-              let prices = exchanges.clone().into_values().enumerate();
+              let cryptocurrencies = exchanges.clone().into_values().enumerate();
               let mut exchanges = exchanges.into_values();
               let exchange = exchanges.next().unwrap();
               let symbol = exchange.symbol;
@@ -269,39 +272,39 @@ impl HodlerServer {
               let mut best_ask_premium = 0.0;
               let mut best_bid_premium = 0.0;
 
-              exchanges.for_each(|price| {
-                sum_volume += price.volume.clone();
-                sum_percent_change += price.percent_change.clone();
-                sum_ask_price += price.ask_price.clone();
-                sum_bid_price += price.bid_price.clone();
+              exchanges.for_each(|cryptocurrency| {
+                sum_volume += cryptocurrency.volume.clone();
+                sum_percent_change += cryptocurrency.percent_change.clone();
+                sum_ask_price += cryptocurrency.ask_price.clone();
+                sum_bid_price += cryptocurrency.bid_price.clone();
                 n += 1.0;
 
-                if price.ask_price.clone() < best_ask_price {
-                  best_ask_exchange = price.exchange.clone();
-                  best_ask_price = price.ask_price.clone();
-                  best_ask_ticker_name = price.ticker_name.clone();
+                if cryptocurrency.ask_price.clone() < best_ask_price {
+                  best_ask_exchange = cryptocurrency.exchange.clone();
+                  best_ask_price = cryptocurrency.ask_price.clone();
+                  best_ask_ticker_name = cryptocurrency.ticker_name.clone();
                 }
 
-                if price.bid_price.clone() > best_bid_price {
-                  best_bid_exchange = price.exchange.clone();
-                  best_bid_price = price.bid_price.clone();
-                  best_bid_ticker_name = price.ticker_name.clone();
+                if cryptocurrency.bid_price.clone() > best_bid_price {
+                  best_bid_exchange = cryptocurrency.exchange.clone();
+                  best_bid_price = cryptocurrency.bid_price.clone();
+                  best_bid_ticker_name = cryptocurrency.ticker_name.clone();
                 }
               });
 
-              prices.for_each(|(i, price)| {
+              cryptocurrencies.for_each(|(i, cryptocurrency)| {
                 let arbitrage = Arbitrage {
-                  exchange: price.exchange.clone(),
+                  exchange: cryptocurrency.exchange.clone(),
                   best_routes: best_bid_exchange.clone(),
-                  rate: (1.0 - price.bid_price / price.ask_price) * 100.0,
+                  rate: (1.0 - cryptocurrency.bid_price / cryptocurrency.ask_price) * 100.0,
                 };
 
                 let premium = Premium {
-                  exchange: price.exchange,
-                  ask_premium: (1.0 - price.ask_price / best_ask_price) * 100.0,
-                  ask_price: price.ask_price,
-                  bid_premium: (1.0 - price.bid_price / best_bid_price) * 100.0,
-                  bid_price: price.bid_price,
+                  exchange: cryptocurrency.exchange,
+                  ask_premium: (1.0 - cryptocurrency.ask_price / best_ask_price) * 100.0,
+                  ask_price: cryptocurrency.ask_price,
+                  bid_premium: (1.0 - cryptocurrency.bid_price / best_bid_price) * 100.0,
+                  bid_price: cryptocurrency.bid_price,
                 };
 
                 arbitrages.push(arbitrage.clone());
@@ -327,7 +330,7 @@ impl HodlerServer {
                 }
               });
 
-              let insight = Insight {
+              let summary = Summary {
                 symbol: symbol.clone(),
                 average_ask_price: sum_ask_price / n,
                 average_bid_price: sum_bid_price / n,
@@ -364,7 +367,7 @@ impl HodlerServer {
               };
 
               json!({
-                "insight": insight,
+                "summary": summary,
                 "arbitrages": arbitrages,
                 "premiums": premiums
               })

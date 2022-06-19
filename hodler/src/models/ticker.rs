@@ -11,7 +11,7 @@ pub struct MarketTicker {
 }
 
 impl MarketTicker {
-  pub fn is_base_ticker(&self) -> bool {
-    self.symbol == config::BASE_SYMBOL
+  pub fn is_currency_ticker(&self) -> bool {
+    self.symbol == config::CURRENCY_SYMBOL
   }
 }
