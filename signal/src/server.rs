@@ -37,6 +37,7 @@ impl HodlerServer {
                 pub ask_price: f32,
                 pub bid_price: f32,
                 pub code: String,
+                pub symbol: String,
                 pub fraction_digits: u8,
                 pub updated_at: i64,
               }
@@ -54,6 +55,11 @@ impl HodlerServer {
                     _ => "USD",
                   }
                   .to_string(),
+                  symbol: match currency.exchange.as_str() {
+                    "bitkub" => "฿",
+                    _ => "$",
+                  }
+                  .to_string(),
                   fraction_digits: 2,
                   updated_at: currency.timestamp,
                 })
@@ -66,6 +72,7 @@ impl HodlerServer {
                   ask_price: 1.0,
                   bid_price: 1.0,
                   code: "BTC".to_string(),
+                  symbol: "currency_bitcoin".to_string(),
                   fraction_digits: 8,
                   updated_at: 0,
                 },
