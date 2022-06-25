@@ -6,7 +6,7 @@ version = "0.1.0"
 
 [workspace]
 default-members = ["signal"]
-members         = ["config", "exchange", "hodler", "signal"]
+members         = ["config", "exchange", "hodler", "server", "signal"]
 
 
 [[bin]]

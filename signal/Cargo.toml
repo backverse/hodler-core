@@ -10,10 +10,9 @@ env_logger        = { version = "0" }
 exchange          = { path = "../exchange" }
 futures-util      = { version = "0" }
 hodler            = { path = "../hodler" }
-hyper             = { version = "0", features = ["full"] }
 log               = { version = "0" }
-regex             = { version = "1" }
 serde             = { version = "1", features = ["derive"] }
 serde_json        = { version = "1" }
+server            = { path = "../server" }
 tokio             = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0", features = ["native-tls"] }

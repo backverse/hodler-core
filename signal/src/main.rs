@@ -1,5 +1,3 @@
-mod server;
-
 use env_logger::{Builder, Env};
 use exchange::{binance, bitkub};
 use futures_util::StreamExt;
@@ -127,6 +125,6 @@ async fn main() {
     binance_ws_handler(hodler.clone()),
     bitkub_ws_handler(hodler.clone()),
     // ftx_ws_handler,
-    hodler_server.serve()
+    hodler_server,
   );
 }
