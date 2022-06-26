@@ -1,0 +1,52 @@
+name: Specification
+
+on:
+  push:
+    branches: [dev]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish-specification:
+    name: 🧾 Publish Specification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install WASM Pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          key: specification-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/bin
+      - name: Install Latest Bit Version
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npx @teambit/bvm install
+      - name: Add bvm Bin Folder to Path
+        run: echo "$HOME/bin" >> $GITHUB_PATH
+      - name: Set Up Bit Config
+        run: |
+          bit config set analytics_reporting false
+          bit config set anonymous_reporting false
+          bit config set user.token ${{ secrets.BIT_TOKEN }}
+      - name: Build Specification WASM Package
+        run: wasm-pack build specification
+      - name: Init Bit Workspace
+        run: bit init
+      - name: Checkout Latest Specification
+        run: bit import backverse.hodler/specification
+      - name: Update Specification Component
+        run: cp specification/pkg/* hodler/specification
+      - name: Stage Files and Auo-Tag Version
+        run: bit tag specification --message "${{ github.event.head_commit.message }}"
+      - name: Publish Specification
+        run: bit export

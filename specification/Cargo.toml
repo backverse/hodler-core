@@ -1,0 +1,12 @@
+[package]
+edition = "2021"
+name    = "specification"
+version = "0.1.0"
+
+
+[lib]
+crate-type = ["cdylib"]
+
+
+[dependencies]
+wasm-bindgen = { version = "0" }
