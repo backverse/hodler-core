@@ -47,6 +47,8 @@ impl Exchange {
   fn get_ticker(&self, symbol: &str) -> String {
     match self {
       Self::BinanceEx => match symbol.clone() {
+        "luna" => "lunc",
+        "luna2" => "luna",
         "pow" => "powr",
         symbol => &symbol,
       },
@@ -69,7 +71,12 @@ impl Exchange {
 
   pub fn get_key(&self, symbol: String) -> String {
     match self {
-      Self::BinanceEx => symbol.replace("usdt", ""),
+      Self::BinanceEx => match symbol.replace("usdt", "").as_str() {
+        "luna" => "luna2",
+        "lunc" => "luna",
+        symbol => &symbol,
+      }
+      .to_string(),
       Self::BitkubEx => match symbol.replace("market.ticker.thb_", "").as_str() {
         "pow" => "powr",
         symbol => &symbol,

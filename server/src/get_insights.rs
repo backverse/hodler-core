@@ -24,58 +24,60 @@ pub async fn handler(query: Parameters, hodler: Arc<Mutex<Hodler>>) -> impl Into
 
   let mut arbitrages = Vec::<Arbitrage>::new();
   let mut premiums = Vec::<Premium>::new();
-  let cryptocurrencies = exchanges.clone().into_values().enumerate();
-  let mut exchanges = exchanges.into_values();
-  let exchange = exchanges.next().unwrap();
-  let symbol = exchange.symbol;
-  let mut sum_volume = exchange.volume;
-  let mut sum_percent_change = exchange.percent_change;
-  let mut sum_ask_price = exchange.ask_price;
-  let mut sum_bid_price = exchange.bid_price;
+  let cryptocurrencies_with_indexes = exchanges.clone().into_values().enumerate();
+  let mut cryptocurrencies = exchanges.into_values();
+  let cryptocurrency = cryptocurrencies.next().unwrap();
+  let symbol = cryptocurrency.symbol;
+  let mut sum_volume = cryptocurrency.volume;
+  let mut sum_percent_change = cryptocurrency.percent_change;
+  let mut sum_ask_price = cryptocurrency.ask_price;
+  let mut sum_bid_price = cryptocurrency.bid_price;
   let mut n: f32 = 1.0;
-  let mut best_ask_exchange = exchange.exchange.clone();
-  let mut best_ask_price = exchange.ask_price;
-  let mut best_ask_ticker_name = exchange.ticker_name.clone();
-  let mut best_bid_exchange = exchange.exchange;
-  let mut best_bid_price = exchange.bid_price;
-  let mut best_bid_ticker_name = exchange.ticker_name;
+  let mut best_ask_exchange = cryptocurrency.exchange.clone();
+  let mut best_ask_price = cryptocurrency.ask_price;
+  let mut best_ask_ticker_name = cryptocurrency.ticker_name.clone();
+  let mut best_bid_exchange = cryptocurrency.exchange;
+  let mut best_bid_price = cryptocurrency.bid_price;
+  let mut best_bid_ticker_name = cryptocurrency.ticker_name;
   let mut best_arbitrage = 0.0;
   let mut best_ask_premium = 0.0;
   let mut best_bid_premium = 0.0;
 
-  exchanges.for_each(|cryptocurrency| {
-    sum_volume += cryptocurrency.volume.clone();
-    sum_percent_change += cryptocurrency.percent_change.clone();
-    sum_ask_price += cryptocurrency.ask_price.clone();
-    sum_bid_price += cryptocurrency.bid_price.clone();
+  cryptocurrencies.for_each(|c| {
+    sum_volume += c.volume.clone();
+    sum_percent_change += c.percent_change.clone();
+    sum_ask_price += c.ask_price.clone();
+    sum_bid_price += c.bid_price.clone();
     n += 1.0;
 
-    if cryptocurrency.ask_price.clone() < best_ask_price {
-      best_ask_exchange = cryptocurrency.exchange.clone();
-      best_ask_price = cryptocurrency.ask_price.clone();
-      best_ask_ticker_name = cryptocurrency.ticker_name.clone();
+    if c.ask_price.clone() < best_ask_price {
+      best_ask_exchange = c.exchange.clone();
+      best_ask_price = c.ask_price.clone();
+      best_ask_ticker_name = c.ticker_name.clone();
     }
 
-    if cryptocurrency.bid_price.clone() > best_bid_price {
-      best_bid_exchange = cryptocurrency.exchange.clone();
-      best_bid_price = cryptocurrency.bid_price.clone();
-      best_bid_ticker_name = cryptocurrency.ticker_name.clone();
+    if c.bid_price.clone() > best_bid_price {
+      best_bid_exchange = c.exchange;
+      best_bid_price = c.bid_price;
+      best_bid_ticker_name = c.ticker_name;
     }
   });
 
-  cryptocurrencies.for_each(|(i, cryptocurrency)| {
+  cryptocurrencies_with_indexes.for_each(|(i, c)| {
     let arbitrage = Arbitrage {
-      exchange: cryptocurrency.exchange.clone(),
-      best_routes: best_bid_exchange.clone(),
-      rate: (1.0 - cryptocurrency.bid_price / cryptocurrency.ask_price) * 100.0,
+      buy_low_exchange: c.exchange.clone(),
+      buy_low_price: c.ask_price.clone(),
+      sell_high_exchange: best_bid_exchange.clone(),
+      sell_high_price: best_bid_price.clone(),
+      rate: (best_bid_price / c.ask_price - 1.0) * 100.0,
     };
 
     let premium = Premium {
-      exchange: cryptocurrency.exchange,
-      ask_premium: (1.0 - cryptocurrency.ask_price / best_ask_price) * 100.0,
-      ask_price: cryptocurrency.ask_price,
-      bid_premium: (1.0 - cryptocurrency.bid_price / best_bid_price) * 100.0,
-      bid_price: cryptocurrency.bid_price,
+      exchange: c.exchange,
+      ask_premium: (c.ask_price / best_ask_price - 1.0) * 100.0,
+      ask_price: c.ask_price,
+      bid_premium: (c.bid_price / best_bid_price - 1.0) * 100.0,
+      bid_price: c.bid_price,
     };
 
     if i == 0 {
@@ -118,25 +120,10 @@ pub async fn handler(query: Parameters, hodler: Arc<Mutex<Hodler>>) -> impl Into
     best_arbitrage,
     best_ask_premium,
     best_bid_premium,
-    symbol_id: match symbol.as_str() {
-      "btc" => "1",
-      "eth" => "1027",
-      "dot" => "6636",
-      "powr" => "2132",
-      "ltc" => "2",
-      "mana" => "1966",
-      "near" => "6535",
-      "zil" => "2469",
-      "doge" => "74",
-      "bnb" => "1839",
-      "iost" => "2405",
-      "sand" => "6210",
-      "gala" => "7080",
-      "sol" => "5426",
-      "avax" => "5805",
-      _ => "",
-    }
-    .to_string(),
+    icon: format!(
+      "https://cdn.bitkubnow.com/coins/icon/{}.png",
+      symbol.replace("powr", "pow").to_uppercase()
+    ),
   };
 
   (
@@ -158,8 +145,10 @@ pub struct Insight {
 
 #[derive(Serialize)]
 pub struct Arbitrage {
-  pub exchange: String,
-  pub best_routes: String,
+  pub buy_low_exchange: String,
+  pub buy_low_price: f32,
+  pub sell_high_exchange: String,
+  pub sell_high_price: f32,
   pub rate: f32,
 }
 
@@ -188,5 +177,5 @@ pub struct Summary {
   pub best_arbitrage: f32,
   pub best_ask_premium: f32,
   pub best_bid_premium: f32,
-  pub symbol_id: String,
+  pub icon: String,
 }
